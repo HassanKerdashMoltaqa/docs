@@ -1,0 +1,2052 @@
+openapi: 3.0.0
+info:
+  title: Malzamty API (APP)
+  description: >-
+    Complete API collection for Malzamty e-learning platform
+
+
+    This collection contains all endpoints for the mobile application including:
+
+    - Authentication (Register, Login, OTP, Password Reset)
+
+    - Profile Management
+
+    - Language Settings
+
+    - Contact Messages
+
+    - Settings
+
+    - Academic Data (Stages, Grades, Classrooms, Subjects, Curricula)
+
+
+    All endpoints require `Accept: application/json` header. Authenticated
+    endpoints require Bearer token in Authorization header.
+  version: 1.0.0
+servers:
+  - url: https://backend.dos.moltaqadev.com
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+tags:
+  - name: Auth
+    description: >-
+      Authentication endpoints for user registration, login, OTP verification,
+      and password management.
+  - name: Profile
+    description: >-
+      Profile management endpoints for viewing and updating user profile
+      information, changing phone number, and account deletion.
+  - name: Language
+    description: >-
+      Language management endpoints for getting available languages and updating
+      user's preferred language.
+  - name: Contact
+    description: Contact endpoints for sending messages to the platform administrators.
+  - name: Settings
+    description: Settings endpoints for retrieving application settings and configuration.
+  - name: Stages
+    description: >-
+      Academic stages endpoints for retrieving educational stages (Primary,
+      Intermediate, Secondary).
+  - name: Grades
+    description: Academic grades endpoints for retrieving grades within each stage.
+  - name: Classrooms
+    description: Classroom endpoints for retrieving classrooms within each grade.
+  - name: Subjects
+    description: Subject endpoints for retrieving subjects within each classroom.
+  - name: Curricula
+    description: >-
+      Curriculum (books) endpoints for retrieving, downloading, and managing
+      educational materials.
+paths:
+  /api/v1/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register
+      description: >-
+        Register a new user account. After successful registration, an OTP code
+        will be sent to the provided phone number for verification.
+
+
+        **Required Fields:**
+
+        - `name`: User's full name (2-100 characters, Arabic/English letters
+        only)
+
+        - `phone`: Saudi phone number (format: 05XXXXXXXX, 10 digits starting
+        with 05)
+
+        - `email`: Valid email address (must be unique)
+
+        - `terms_accepted`: Must be `true` to accept terms and conditions
+
+        - `context`: Authentication context (usually `"client"` for mobile app)
+
+
+        **Optional Fields:**
+
+        - `role`: User role (nullable, max 100 characters)
+
+
+        **Response:** Returns user data and a message indicating that OTP has
+        been sent.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: Hassan Kerdash
+                phone: '0501234567'
+                email: hassankerdash@example.com
+                terms_accepted: true
+                context: client
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login
+      description: >-
+        Login with email/phone and password. Returns user data and access token.
+
+
+        **Required Fields:**
+
+        - `identifier`: Email address or phone number
+
+        - `password`: User password (minimum 6 characters)
+
+        - `context`: Authentication context (`"client"` for mobile app,
+        `"dashboard"` for admin panel)
+
+
+        **Response:** Returns user object and Bearer token for authenticated
+        requests.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                context: dashboard
+                identifier: superadmin@example.com
+                password: SuperAdmin@123
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/auth/login/send-otp:
+    post:
+      tags:
+        - Auth
+      summary: Send Login OTP
+      description: >-
+        Send OTP code to phone number for login. The OTP will be sent via SMS.
+
+
+        **Required Fields:**
+
+        - `phone`: Saudi phone number (format: 05XXXXXXXX, 10 digits starting
+        with 05)
+
+        - `context`: Authentication context (usually `"client"` for mobile app)
+
+
+        **Response:** Returns success message indicating OTP has been sent.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                phone: '0501234567'
+                context: client
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/auth/login/verify-otp:
+    post:
+      tags:
+        - Auth
+      summary: Verify Login OTP
+      description: >-
+        Verify OTP code for login. If valid, returns user data and access token.
+
+
+        **Required Fields:**
+
+        - `phone`: Saudi phone number (format: 05XXXXXXXX)
+
+        - `otp_code`: OTP code received via SMS (4 digits by default)
+
+        - `context`: Authentication context (usually `"client"` for mobile app)
+
+
+        **Response:** Returns user object and Bearer token for authenticated
+        requests.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                phone: '0501234567'
+                otp_code: '1234'
+                context: client
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/auth/forgot-password:
+    post:
+      tags:
+        - Auth
+      summary: Forgot Password
+      description: >-
+        Request password reset. Sends OTP code to the registered email address.
+
+
+        **Required Fields:**
+
+        - `email`: Registered email address (must exist in database)
+
+        - `context`: Authentication context (usually `"dashboard"` for admin
+        panel)
+
+
+        **Response:** Returns success message indicating OTP has been sent to
+        email.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                email: hassankerdash@example.com
+                context: dashboard
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/auth/verify-reset-otp:
+    post:
+      tags:
+        - Auth
+      summary: Verify Reset OTP
+      description: >-
+        Verify OTP code for password reset. Must be called before resetting
+        password.
+
+
+        **Required Fields:**
+
+        - `email`: Registered email address
+
+        - `otp_code`: OTP code received via email (4 digits by default)
+
+        - `context`: Authentication context (usually `"dashboard"` for admin
+        panel)
+
+
+        **Response:** Returns success message if OTP is valid.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                email: hassankerdash@example.com
+                otp_code: '1234'
+                context: dashboard
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/auth/reset-password:
+    post:
+      tags:
+        - Auth
+      summary: Reset Password
+      description: >-
+        Reset user password after OTP verification.
+
+
+        **Required Fields:**
+
+        - `email`: Registered email address
+
+        - `otp_code`: OTP code received via email (must match the one sent in
+        forgot password)
+
+        - `password`: New password (minimum 6 characters)
+
+        - `password_confirmation`: Must match the password field
+
+        - `context`: Authentication context (usually `"dashboard"` for admin
+        panel)
+
+
+        **Response:** Returns success message if password reset is successful.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                email: hassankerdash@example.com
+                otp_code: '1234'
+                password: NewSuperAdmin@123
+                password_confirmation: NewSuperAdmin@123
+                context: dashboard
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout
+      description: |-
+        Logout the authenticated user and revoke the current access token.
+
+        **Authentication:** Required (Bearer token)
+
+        **Response:** Returns success message if logout is successful.
+      requestBody:
+        content: {}
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Me
+      description: >-
+        Get the authenticated user's information.
+
+
+        **Authentication:** Required (Bearer token)
+
+
+        **Response:** Returns the authenticated user object with all user
+        details.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/profile:
+    get:
+      tags:
+        - Profile
+      summary: Get Profile
+      description: >-
+        Get the authenticated user's profile information including academic
+        details.
+
+
+        **Authentication:** Required (Bearer token)
+
+
+        **Response:** Returns user profile with name, email, phone, academic
+        stage, grade, semester, and school name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    put:
+      tags:
+        - Profile
+      summary: Update Profile
+      description: >-
+        Update the authenticated user's profile information. All fields are
+        optional.
+
+
+        **Authentication:** Required (Bearer token)
+
+
+        **Optional Fields:**
+
+        - `name`: User's full name (2-100 characters, Arabic/English letters
+        only)
+
+        - `email`: Valid email address (must be unique if changed)
+
+        - `stage_id`: UUID of academic stage (must exist in stages table)
+
+        - `grade_id`: UUID of academic grade (must exist in classes table)
+
+        - `semester`: Academic semester (`"first"` or `"second"`)
+
+        - `school_name`: Name of the school (max 255 characters)
+
+
+        **Response:** Returns updated user profile.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: Hassan Kerdash Updated
+                email: newemail@example.com
+                stage_id: uuid-of-stage
+                grade_id: uuid-of-grade
+                semester: first
+                school_name: My School Name
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - Profile
+      summary: Delete Account
+      description: >-
+        Permanently delete the authenticated user's account.
+
+
+        **Authentication:** Required (Bearer token)
+
+
+        **Warning:** This action cannot be undone. All user data will be
+        permanently deleted.
+
+
+        **Response:** Returns success message if account deletion is successful.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/profile/change-phone:
+    post:
+      tags:
+        - Profile
+      summary: Change Phone
+      description: >-
+        Request to change phone number. Sends OTP to the new phone number for
+        verification.
+
+
+        **Authentication:** Required (Bearer token)
+
+
+        **Required Fields:**
+
+        - `phone`: New Saudi phone number (format: 05XXXXXXXX, must be unique)
+
+
+        **Response:** Returns success message indicating OTP has been sent to
+        the new phone number.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                phone: '0509876543'
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/profile/verify-phone-change:
+    post:
+      tags:
+        - Profile
+      summary: Verify Phone Change
+      description: >-
+        Verify OTP code to complete phone number change.
+
+
+        **Authentication:** Required (Bearer token)
+
+
+        **Required Fields:**
+
+        - `phone`: New phone number (must match the one used in change-phone
+        request)
+
+        - `otp_code`: OTP code received via SMS (4 digits by default)
+
+
+        **Response:** Returns success message if phone number is successfully
+        updated.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                phone: '0509876543'
+                otp_code: '1111'
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/language/available:
+    get:
+      tags:
+        - Language
+      summary: Get Available Languages
+      description: >-
+        Get list of available languages in the application. This endpoint does
+        not require authentication.
+
+
+        **Response:** Returns array of available languages with code, Arabic
+        name, and English name.
+
+
+        **Example Response:**
+
+        ```json
+
+        {
+          "languages": [
+            {"code": "ar", "name": "العربية", "name_en": "Arabic"},
+            {"code": "en", "name": "English", "name_en": "English"}
+          ]
+        }
+
+        ```
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/language:
+    get:
+      tags:
+        - Language
+      summary: Get Language
+      description: >-
+        Get the authenticated user's current language preference.
+
+
+        **Authentication:** Required (Bearer token)
+
+
+        **Response:** Returns user's current language code and list of available
+        languages.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    put:
+      tags:
+        - Language
+      summary: Update Language
+      description: |-
+        Update the authenticated user's language preference.
+
+        **Authentication:** Required (Bearer token)
+
+        **Required Fields:**
+        - `language`: Language code (`"ar"` for Arabic or `"en"` for English)
+
+        **Response:** Returns updated language code.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                language: ar
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/contact:
+    post:
+      tags:
+        - Contact
+      summary: Send Contact Message
+      description: >-
+        Send a contact message to the platform administrators. This endpoint
+        does not require authentication.
+
+
+        **Required Fields:**
+
+        - `name`: Sender's full name (2-100 characters, Arabic/English letters
+        only)
+
+        - `email`: Valid email address
+
+        - `subject`: Message subject (3-200 characters)
+
+        - `message`: Message content (10-2000 characters)
+
+
+        **Optional Fields:**
+
+        - `phone`: Saudi phone number (format: 05XXXXXXXX)
+
+
+        **Response:** Returns success message if contact message is sent
+        successfully.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: Hassan Kerdash
+                email: hassankerdash@example.com
+                phone: '0501234567'
+                subject: Question
+                message: I have a question about...
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/settings:
+    get:
+      tags:
+        - Settings
+      summary: Get Settings
+      description: >-
+        Get all application settings with advanced filtering, sorting, and
+        pagination. This endpoint does not require authentication.
+
+
+        **Query Parameters:**
+
+
+        **Pagination:**
+
+        - `paginate`: Enable pagination (1 = paginated, omit = get all)
+
+        - `per_page`: Items per page (1-100, default: 15)
+
+        - `page`: Page number
+
+
+        **Sorting:**
+
+        - `sort`: Sort field with optional '-' prefix for descending (default:
+        -id)
+
+
+        **Filtering:**
+
+        - `filter[group]`: Filter by group (exact match)
+
+        - `filter[key]`: Filter by key (exact or partial)
+
+        - `filter[is_translatable]`: Filter by translatable status (1/0)
+
+        - `filter[exclude_group]`: Exclude specific group
+
+        - `filter[exclude_key]`: Exclude specific keys (comma-separated)
+
+        - `filter[not_translatable]`: Non-translatable only (1)
+
+
+        **Relationships:**
+
+        - `include`: Include relationships (translations)
+
+
+        **Field Selection:**
+
+        - `fields[settings]`: Select specific fields (comma-separated)
+
+
+        **Response:** Returns settings with pagination metadata if paginated, or
+        all settings if not.
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: paginate
+          in: query
+          schema:
+            type: integer
+          description: >-
+            Enable pagination (1 = paginated, 0 or omit = get all). Default: get
+            all
+          example: '1'
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+          description: 'Number of items per page (min: 1, max: 100, default: 15)'
+          example: '15'
+        - name: sort
+          in: query
+          schema:
+            type: string
+          description: >-
+            Sort by field. Use '-' prefix for descending order. Allowed: id
+            (default: -id)
+          example: '-id'
+        - name: filter[group]
+          in: query
+          schema:
+            type: string
+          description: >-
+            Filter by group (exact match). Examples: 'contact', 'content',
+            'technical'
+          example: contact
+        - name: include
+          in: query
+          schema:
+            type: string
+          description: 'Include relationships. Allowed: translations (comma-separated)'
+          example: translations
+        - name: fields[settings]
+          in: query
+          schema:
+            type: string
+          description: >-
+            Select specific fields. Allowed: key, fixed_value, group,
+            is_translatable, value (comma-separated)
+          example: key,group
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/settings/{key}:
+    get:
+      tags:
+        - Settings
+      summary: Get Setting
+      description: >-
+        Get a specific setting by key. This endpoint does not require
+        authentication.
+
+
+        **Path Parameters:**
+
+        - `key`: Setting key identifier (e.g., `about_us`, `privacy_policy`,
+        `terms_conditions`)
+
+
+        **Response:** Returns the setting value for the specified key.
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: key
+          in: path
+          schema:
+            type: string
+          required: true
+          description: Setting key (e.g., 'about_us', 'privacy_policy', 'terms_conditions')
+          example: about_us
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/stages:
+    get:
+      tags:
+        - Stages
+      summary: Get Stages
+      description: >-
+        Get list of all academic stages with advanced filtering, sorting, and
+        pagination. This endpoint does not require authentication.
+
+
+        **Query Parameters:**
+
+
+        **Pagination:**
+
+        - `paginate`: Enable pagination (1 = paginated, omit = get all)
+
+        - `per_page`: Items per page (1-100, default: 15)
+
+        - `page`: Page number
+
+
+        **Sorting:**
+
+        - `sort`: Sort field with optional '-' prefix for descending (default:
+        -id)
+
+
+        **Filtering:**
+
+        - `filter[id]`: Filter by stage ID (exact match)
+
+        - `filter[is_active]`: Filter by active status (1/0)
+
+        - `filter[name_ar]`: Search by Arabic name (partial)
+
+        - `filter[name_en]`: Search by English name (partial)
+
+        - `filter[search]`: Search in name and description
+
+
+        **Relationships:**
+
+        - `include`: Include relationships (translations, grades)
+
+
+        **Field Selection:**
+
+        - `fields[stages]`: Select specific fields (comma-separated)
+
+
+        **Response:** Returns paginated list of academic stages with
+        translations (Arabic and English).
+
+
+        **Example Stages:**
+
+        - المرحلة الابتدائية (Primary Stage)
+
+        - المرحلة المتوسطة (Intermediate Stage)
+
+        - المرحلة الثانوية (Secondary Stage)
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: paginate
+          in: query
+          schema:
+            type: integer
+          description: Enable pagination (1 = paginated, 0 or omit = get all)
+          example: '1'
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+          description: 'Number of items per page (min: 1, max: 100, default: 15)'
+          example: '15'
+        - name: sort
+          in: query
+          schema:
+            type: string
+          description: >-
+            Sort by field. Use '-' prefix for descending. Allowed: id,
+            created_at (default: -id)
+          example: '-id'
+        - name: filter[is_active]
+          in: query
+          schema:
+            type: integer
+          description: Filter by active status (1 = active, 0 = inactive)
+          example: '1'
+        - name: filter[search]
+          in: query
+          schema:
+            type: string
+          description: Search in name and description (Arabic or English)
+          example: ابتدائي
+        - name: include
+          in: query
+          schema:
+            type: string
+          description: >-
+            Include relationships. Allowed: translations, grades
+            (comma-separated)
+          example: translations,grades
+        - name: fields[stages]
+          in: query
+          schema:
+            type: string
+          description: >-
+            Select specific fields. Allowed: id, is_active, created_at,
+            updated_at (comma-separated)
+          example: id,is_active
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/stages/{id}:
+    get:
+      tags:
+        - Stages
+      summary: Get Stage
+      description: >-
+        Get a specific academic stage by ID. This endpoint does not require
+        authentication.
+
+
+        **Path Parameters:**
+
+        - `id`: UUID of the academic stage
+
+
+        **Query Parameters (Optional):**
+
+        - `include`: Include relationships (translations, grades)
+
+        - `fields[stages]`: Select specific fields (comma-separated)
+
+
+        **Response:** Returns stage details with translations (Arabic and
+        English).
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: include
+          in: query
+          schema:
+            type: string
+          description: >-
+            Include relationships. Allowed: translations, grades
+            (comma-separated)
+          example: translations,grades
+        - name: fields[stages]
+          in: query
+          schema:
+            type: string
+          description: >-
+            Select specific fields. Allowed: id, is_active, created_at,
+            updated_at (comma-separated)
+          example: id,is_active
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: UUID of the academic stage
+          example: stage-uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/grades:
+    get:
+      tags:
+        - Grades
+      summary: Get Grades
+      description: >-
+        Get list of all academic grades with advanced filtering, sorting, and
+        pagination. This endpoint does not require authentication.
+
+
+        **Query Parameters:**
+
+
+        **Pagination:**
+
+        - `paginate`: Enable pagination (1 = paginated, omit = get all)
+
+        - `per_page`: Items per page (1-100, default: 15)
+
+        - `page`: Page number
+
+
+        **Sorting:**
+
+        - `sort`: Sort field with optional '-' prefix for descending (default:
+        -id)
+
+
+        **Filtering:**
+
+        - `filter[id]`: Filter by grade ID (exact match)
+
+        - `filter[stage_id]`: Filter by stage ID (exact match)
+
+        - `filter[is_active]`: Filter by active status (1/0)
+
+        - `filter[name_ar]`: Search by Arabic name (partial)
+
+        - `filter[name_en]`: Search by English name (partial)
+
+        - `filter[search]`: Search in name and description
+
+
+        **Relationships:**
+
+        - `include`: Include relationships (translations, stage, classrooms)
+
+
+        **Field Selection:**
+
+        - `fields[grades]`: Select specific fields (comma-separated)
+
+
+        **Response:** Returns paginated list of academic grades with
+        translations (Arabic and English) and associated stage information.
+
+
+        **Example Grades:**
+
+        - الصف الأول الابتدائي (First Grade)
+
+        - الصف الثاني المتوسط (Second Intermediate)
+
+        - الصف الثالث الثانوي (Third Secondary)
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: paginate
+          in: query
+          schema:
+            type: integer
+          description: Enable pagination (1 = paginated, 0 or omit = get all)
+          example: '1'
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+          description: 'Number of items per page (min: 1, max: 100, default: 15)'
+          example: '15'
+        - name: sort
+          in: query
+          schema:
+            type: string
+          description: >-
+            Sort by field. Use '-' prefix for descending. Allowed: id, stage_id,
+            created_at (default: -id)
+          example: '-id'
+        - name: filter[stage_id]
+          in: query
+          schema:
+            type: string
+          description: Filter by stage ID (exact match)
+          example: uuid
+        - name: filter[is_active]
+          in: query
+          schema:
+            type: integer
+          description: Filter by active status (1 = active, 0 = inactive)
+          example: '1'
+        - name: filter[search]
+          in: query
+          schema:
+            type: string
+          description: Search in name and description (Arabic or English)
+          example: أول
+        - name: include
+          in: query
+          schema:
+            type: string
+          description: >-
+            Include relationships. Allowed: translations, stage, classrooms
+            (comma-separated)
+          example: translations,stage,classrooms
+        - name: fields[grades]
+          in: query
+          schema:
+            type: string
+          description: >-
+            Select specific fields. Allowed: id, stage_id, is_active,
+            created_at, updated_at (comma-separated)
+          example: id,stage_id,is_active
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/grades/{id}:
+    get:
+      tags:
+        - Grades
+      summary: Get Grade
+      description: >-
+        Get a specific academic grade by ID. This endpoint does not require
+        authentication.
+
+
+        **Path Parameters:**
+
+        - `id`: UUID of the academic grade
+
+
+        **Query Parameters (Optional):**
+
+        - `include`: Include relationships (translations, stage, classrooms)
+
+        - `fields[grades]`: Select specific fields (comma-separated)
+
+
+        **Response:** Returns grade details with translations (Arabic and
+        English) and associated stage information.
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: include
+          in: query
+          schema:
+            type: string
+          description: >-
+            Include relationships. Allowed: translations, stage, classrooms
+            (comma-separated)
+          example: translations,stage,classrooms
+        - name: fields[grades]
+          in: query
+          schema:
+            type: string
+          description: >-
+            Select specific fields. Allowed: id, stage_id, is_active,
+            created_at, updated_at (comma-separated)
+          example: id,stage_id,is_active
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: UUID of the academic grade
+          example: grade-uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/classrooms:
+    get:
+      tags:
+        - Classrooms
+      summary: Get Classrooms
+      description: >-
+        Get list of all classrooms with advanced filtering, sorting, and
+        pagination. This endpoint does not require authentication.
+
+
+        **Query Parameters:**
+
+
+        **Pagination:**
+
+        - `paginate`: Enable pagination (1 = paginated, omit = get all)
+
+        - `per_page`: Items per page (1-100, default: 15)
+
+        - `page`: Page number
+
+
+        **Sorting:**
+
+        - `sort`: Sort field with optional '-' prefix for descending (default:
+        -id)
+
+
+        **Filtering:**
+
+        - `filter[id]`: Filter by classroom ID (exact match)
+
+        - `filter[grade_id]`: Filter by grade ID (exact match)
+
+        - `filter[is_active]`: Filter by active status (1/0)
+
+        - `filter[name_ar]`: Search by Arabic name (partial)
+
+        - `filter[name_en]`: Search by English name (partial)
+
+        - `filter[search]`: Search in name and description
+
+
+        **Relationships:**
+
+        - `include`: Include relationships (translations, grade, grade.stage)
+
+
+        **Field Selection:**
+
+        - `fields[classrooms]`: Select specific fields (comma-separated)
+
+
+        **Response:** Returns paginated list of classrooms with translations
+        (Arabic and English) and associated grade and stage information.
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: paginate
+          in: query
+          schema:
+            type: integer
+          description: Enable pagination (1 = paginated, 0 or omit = get all)
+          example: '1'
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+          description: 'Number of items per page (min: 1, max: 100, default: 15)'
+          example: '15'
+        - name: sort
+          in: query
+          schema:
+            type: string
+          description: >-
+            Sort by field. Use '-' prefix for descending. Allowed: id, grade_id,
+            created_at (default: -id)
+          example: '-id'
+        - name: filter[grade_id]
+          in: query
+          schema:
+            type: string
+          description: Filter by grade ID (exact match)
+          example: uuid
+        - name: filter[is_active]
+          in: query
+          schema:
+            type: integer
+          description: Filter by active status (1 = active, 0 = inactive)
+          example: '1'
+        - name: filter[search]
+          in: query
+          schema:
+            type: string
+          description: Search in name and description (Arabic or English)
+          example: فصل
+        - name: include
+          in: query
+          schema:
+            type: string
+          description: >-
+            Include relationships. Allowed: translations, grade, grade.stage
+            (comma-separated)
+          example: translations,grade,grade.stage
+        - name: fields[classrooms]
+          in: query
+          schema:
+            type: string
+          description: >-
+            Select specific fields. Allowed: id, grade_id, is_active,
+            created_at, updated_at (comma-separated)
+          example: id,grade_id,is_active
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/classrooms/{id}:
+    get:
+      tags:
+        - Classrooms
+      summary: Get Classroom
+      description: >-
+        Get a specific classroom by ID. This endpoint does not require
+        authentication.
+
+
+        **Path Parameters:**
+
+        - `id`: UUID of the classroom
+
+
+        **Query Parameters (Optional):**
+
+        - `include`: Include relationships (translations, grade, grade.stage)
+
+        - `fields[classrooms]`: Select specific fields (comma-separated)
+
+
+        **Response:** Returns classroom details with translations (Arabic and
+        English) and associated grade and stage information.
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: include
+          in: query
+          schema:
+            type: string
+          description: >-
+            Include relationships. Allowed: translations, grade, grade.stage
+            (comma-separated)
+          example: translations,grade,grade.stage
+        - name: fields[classrooms]
+          in: query
+          schema:
+            type: string
+          description: >-
+            Select specific fields. Allowed: id, grade_id, is_active,
+            created_at, updated_at (comma-separated)
+          example: id,grade_id,is_active
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: UUID of the classroom
+          example: classroom-uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/subjects:
+    get:
+      tags:
+        - Subjects
+      summary: Get Subjects
+      description: >-
+        Get list of all subjects with advanced filtering, sorting, and
+        pagination. This endpoint does not require authentication.
+
+
+        **Query Parameters:**
+
+
+        **Pagination:**
+
+        - `paginate`: Enable pagination (1 = paginated, omit = get all)
+
+        - `per_page`: Items per page (1-100, default: 15)
+
+        - `page`: Page number
+
+
+        **Sorting:**
+
+        - `sort`: Sort field with optional '-' prefix for descending (default:
+        -id)
+
+
+        **Filtering:**
+
+        - `filter[id]`: Filter by subject ID (exact match)
+
+        - `filter[classroom_id]`: Filter by classroom ID (exact match)
+
+        - `filter[is_active]`: Filter by active status (1/0)
+
+        - `filter[name_ar]`: Search by Arabic name (partial)
+
+        - `filter[name_en]`: Search by English name (partial)
+
+        - `filter[search]`: Search in name and description
+
+
+        **Relationships:**
+
+        - `include`: Include relationships (translations, classroom, curricula)
+
+
+        **Field Selection:**
+
+        - `fields[subjects]`: Select specific fields (comma-separated)
+
+
+        **Response:** Returns paginated list of subjects with translations
+        (Arabic and English) and associated classroom, grade, and stage
+        information.
+
+
+        **Example Subjects:**
+
+        - اللغة العربية (Arabic Language)
+
+        - الرياضيات (Mathematics)
+
+        - العلوم (Science)
+
+        - اللغة الإنجليزية (English Language)
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: paginate
+          in: query
+          schema:
+            type: integer
+          description: Enable pagination (1 = paginated, 0 or omit = get all)
+          example: '1'
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+          description: 'Number of items per page (min: 1, max: 100, default: 15)'
+          example: '15'
+        - name: sort
+          in: query
+          schema:
+            type: string
+          description: >-
+            Sort by field. Use '-' prefix for descending. Allowed: id,
+            classroom_id, is_active, created_at (default: -id)
+          example: '-id'
+        - name: filter[classroom_id]
+          in: query
+          schema:
+            type: string
+          description: Filter by classroom ID (exact match)
+          example: uuid
+        - name: filter[is_active]
+          in: query
+          schema:
+            type: integer
+          description: Filter by active status (1 = active, 0 = inactive)
+          example: '1'
+        - name: filter[search]
+          in: query
+          schema:
+            type: string
+          description: Search in name and description (Arabic or English)
+          example: عربية
+        - name: include
+          in: query
+          schema:
+            type: string
+          description: >-
+            Include relationships. Allowed: translations, classroom, curricula
+            (comma-separated)
+          example: translations,classroom,curricula
+        - name: fields[subjects]
+          in: query
+          schema:
+            type: string
+          description: >-
+            Select specific fields. Allowed: id, classroom_id, is_active,
+            created_at, updated_at (comma-separated)
+          example: id,classroom_id,is_active
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/subjects/{id}:
+    get:
+      tags:
+        - Subjects
+      summary: Get Subject
+      description: >-
+        Get a specific subject by ID. This endpoint does not require
+        authentication.
+
+
+        **Path Parameters:**
+
+        - `id`: UUID of the subject
+
+
+        **Query Parameters (Optional):**
+
+        - `include`: Include relationships (translations, classroom, curricula)
+
+        - `fields[subjects]`: Select specific fields (comma-separated)
+
+
+        **Response:** Returns subject details with translations (Arabic and
+        English) and associated classroom, grade, and stage information.
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: include
+          in: query
+          schema:
+            type: string
+          description: >-
+            Include relationships. Allowed: translations, classroom, curricula
+            (comma-separated)
+          example: translations,classroom,curricula
+        - name: fields[subjects]
+          in: query
+          schema:
+            type: string
+          description: >-
+            Select specific fields. Allowed: id, classroom_id, is_active,
+            created_at, updated_at (comma-separated)
+          example: id,classroom_id,is_active
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: UUID of the subject
+          example: subject-uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/curricula:
+    get:
+      tags:
+        - Curricula
+      summary: Get Curricula
+      description: >-
+        Get list of all curricula (books) with advanced filtering, sorting, and
+        pagination. This endpoint does not require authentication, but
+        authentication is recommended to get user-specific notes.
+
+
+        **Query Parameters:**
+
+
+        **Pagination:**
+
+        - `paginate`: Enable pagination (1 = paginated, omit = get all)
+
+        - `per_page`: Items per page (1-100, default: 15)
+
+        - `page`: Page number
+
+
+        **Sorting:**
+
+        - `sort`: Sort field with optional '-' prefix for descending (default:
+        -created_at)
+
+
+        **Filtering:**
+
+        - `filter[id]`: Filter by curriculum ID (exact match)
+
+        - `filter[classroom_id]`: Filter by classroom ID (exact match)
+
+        - `filter[is_active]`: Filter by active status (1/0)
+
+        - `filter[share_token]`: Filter by share token (exact match)
+
+        - `filter[title_ar]`: Search by Arabic title (partial)
+
+        - `filter[title_en]`: Search by English title (partial)
+
+        - `filter[search]`: Search in title, description, and note
+
+        - `filter[has_file]`: Filter by file existence (1/0)
+
+
+        **Relationships:**
+
+        - `include`: Include relationships (translations, classroom)
+
+
+        **Field Selection:**
+
+        - `fields[curricula]`: Select specific fields (comma-separated)
+
+
+        **Response:** Returns paginated list of curricula with title,
+        description, file information, download count, and associated
+        classroom/subject information.
+
+
+        **Note:** If authenticated, the response will include `user_note` field
+        if the user has added a personal note to any curriculum.
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: paginate
+          in: query
+          schema:
+            type: integer
+          description: Enable pagination (1 = paginated, 0 or omit = get all)
+          example: '1'
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+          description: 'Number of items per page (min: 1, max: 100, default: 15)'
+          example: '15'
+        - name: sort
+          in: query
+          schema:
+            type: string
+          description: >-
+            Sort by field. Use '-' prefix for descending. Allowed: id,
+            classroom_id, created_at, updated_at, download_count (default:
+            -created_at)
+          example: '-created_at'
+        - name: filter[classroom_id]
+          in: query
+          schema:
+            type: string
+          description: Filter by classroom ID (exact match)
+          example: uuid
+        - name: filter[is_active]
+          in: query
+          schema:
+            type: integer
+          description: Filter by active status (1 = active, 0 = inactive)
+          example: '1'
+        - name: filter[search]
+          in: query
+          schema:
+            type: string
+          description: Search in title, description, and note (Arabic or English)
+          example: رياضيات
+        - name: filter[has_file]
+          in: query
+          schema:
+            type: integer
+          description: Filter by file existence (1 = has file, 0 = no file)
+          example: '1'
+        - name: include
+          in: query
+          schema:
+            type: string
+          description: >-
+            Include relationships. Allowed: translations, classroom
+            (comma-separated)
+          example: translations,classroom
+        - name: fields[curricula]
+          in: query
+          schema:
+            type: string
+          description: >-
+            Select specific fields. Allowed: id, classroom_id, file_path,
+            file_name, file_type, file_size, note, share_token, shared_at,
+            download_count, is_active, created_at, updated_at (comma-separated)
+          example: id,classroom_id,file_name,download_count
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/curricula/{id}:
+    get:
+      tags:
+        - Curricula
+      summary: Get Curriculum
+      description: >-
+        Get a specific curriculum (book) by ID. This endpoint does not require
+        authentication, but authentication is recommended to get user-specific
+        notes.
+
+
+        **Path Parameters:**
+
+        - `id`: UUID of the curriculum
+
+
+        **Query Parameters (Optional):**
+
+        - `include`: Include relationships (translations, classroom)
+
+        - `fields[curricula]`: Select specific fields (comma-separated)
+
+
+        **Response:** Returns curriculum details including:
+
+        - Title and description (with translations)
+
+        - File information (name, type, size)
+
+        - Download count
+
+        - Download URL
+
+        - User's personal note (if authenticated and note exists)
+
+        - Associated classroom and subject information
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: include
+          in: query
+          schema:
+            type: string
+          description: >-
+            Include relationships. Allowed: translations, classroom
+            (comma-separated)
+          example: translations,classroom
+        - name: fields[curricula]
+          in: query
+          schema:
+            type: string
+          description: >-
+            Select specific fields. Allowed: id, classroom_id, file_path,
+            file_name, file_type, file_size, note, share_token, shared_at,
+            download_count, is_active, created_at, updated_at (comma-separated)
+          example: id,classroom_id,file_name,download_count
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: UUID of the curriculum (book)
+          example: curriculum-uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/curricula/{id}/download:
+    get:
+      tags:
+        - Curricula
+      summary: Download Curriculum
+      description: >-
+        Download a curriculum file (PDF). This endpoint does not require
+        authentication.
+
+
+        **Path Parameters:**
+
+        - `id`: UUID of the curriculum to download
+
+
+        **Response:** Returns the PDF file as a binary download. The download
+        count for the curriculum will be incremented automatically.
+
+
+        **Note:** The file will be downloaded with the original filename.
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: UUID of the curriculum (book) to download
+          example: curriculum-uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/v1/curricula/{id}/note:
+    post:
+      tags:
+        - Curricula
+      summary: Add Note to Curriculum
+      description: >-
+        Add or update a personal note for a specific curriculum. Each user can
+        have one note per curriculum. If a note already exists, it will be
+        updated.
+
+
+        **Authentication:** Required (Bearer token)
+
+
+        **Path Parameters:**
+
+        - `id`: UUID of the curriculum
+
+
+        **Required Fields:**
+
+        - `note`: Personal note text (max 1000 characters)
+
+
+        **Response:** Returns the updated curriculum with the user's note
+        included in the response.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                note: This is my note
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            type: string
+          description: Specifies that the client expects JSON response
+          example: application/json
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          description: Specifies that the request body is JSON
+          example: application/json
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: UUID of the curriculum (book) to add note to
+          example: curriculum-uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
