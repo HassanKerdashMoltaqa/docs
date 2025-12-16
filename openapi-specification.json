@@ -1,0 +1,1843 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Malzamty API",
+    "description": "# 📚 Malzamty API – Complete Documentation\n\n## Overview\n\nA comprehensive and fully documented Postman collection for testing all API modules of the Malzamty educational platform. This collection is designed to be a complete guide for developers and testers.\n\n---\n\n## 🚀 Quick Start\n\n### 1\\. Import Collection\n\n- Open Postman\n    \n- Click **Import**\n    \n- Select the file **Malzamty API.postman_collection.json**\n    \n\n### 2\\. Setup Variables\n\n#### Collection Variables:\n\n| Variable | Description | Default Value |\n| --- | --- | --- |\n| base_url | Base API URL | [http://127.0.0.1:8000/api](http://127.0.0.1:8000/api) |\n| access_token | Access token (auto-saved) | Empty |\n| refresh_token | Refresh token (auto-saved) | Empty |\n\n**Note:** `access_token` and `refresh_token` are automatically saved after a successful login.\n\n---\n\n## 🔐 Authentication\n\n### Authentication Types:\n\n1. **Phone OTP** – for regular users (Client Context)\n    \n2. **Email/Password** – for administrators (Dashboard Context)\n    \n\n### Using Tokens:\n\nAll endpoints that require authentication use a Bearer Token in the `Authorization` header:\n\n```\nAuthorization: Bearer {{access_token}}\n\n ```\n\n### Token Expiration:\n\n- **Access Token:** 60 minutes\n    \n- **Refresh Token:** 30 days\n    \n\n---\n\n## 📋 API Structure\n\n### Version:\n\n- All endpoints use version **v1**\n    \n- Base URL: `{{base_url}}/v1`\n    \n\n---\n\n## 🎯 Available Modules\n\n1. **Authentication** – Login & registration\n    \n2. **Profile** – Profile management\n    \n3. **Users** – User management\n    \n4. **Settings** – Application settings\n    \n5. **Authorization** – Roles & permissions\n    \n6. **Language** – Language management\n    \n7. **Stages** – Educational stages\n    \n8. **Grades** – School grades\n    \n9. **Semesters** – Academic semesters\n    \n10. **Subjects** – Subjects\n    \n11. **Curricula** – Curricula management\n    \n12. **Contact** – Contact & messaging\n    \n13. **Evaluations** – Evaluations\n    \n\n---\n\n## 📖 How to Use\n\n### Basic Testing Steps:\n\n1. **Register or Login**\n    \n    - Use **Register** to create a new account\n        \n    - Or use **Send Login OTP** then **Verify OTP** to log in\n        \n2. **Verify OTP**\n    \n    - In the development environment, use OTP: **1111**\n        \n    - In production, a real OTP will be sent via SMS\n        \n3. **Use Other Endpoints**\n    \n    - After login, tokens are saved automatically\n        \n    - All protected endpoints will work automatically\n        \n\n---\n\n## ⚙️ Environment Settings\n\n### Development Environment:\n\n- Base URL: [http://127.0.0.1:8000/api](http://127.0.0.1:8000/api)\n    \n- Test OTP: **1111**\n    \n\n### Production Environment:\n\n- Base URL: [https://api.malzamty.com/api](https://api.malzamty.com/api)\n    \n- Real OTP sent via SMS\n    \n\n---\n\n## 📝 Important Notes\n\n1. **OTP in Development:** In local development, OTP **1111** can be used for testing\n    \n2. **Date Format:** All dates follow ISO 8601 format\n    \n3. **Language:** API supports Arabic and English\n    \n4. **Pagination:** Most data lists support pagination\n    \n\n---\n\n## 🆘 Support\n\nFor help and support, please contact the development team.\n\n---",
+    "version": "1.0.0"
+  },
+  "servers": [],
+  "paths": {
+    "/v1/auth/register": {
+      "post": {
+        "tags": [
+          "Register"
+        ],
+        "summary": "Register",
+        "description": "Register a new user account.\n\n**Request Fields:**\n- `name` (required): User full name, 2-100 characters, accepts any language\n- `phone` (required): Phone number in format 05XXXXXXXX, must be unique\n- `email` (required): Valid email address, max 255 characters, must be unique\n- `terms_accepted` (required): Must be 1 or true to accept terms\n- `context` (optional): Authentication context, default is 'client'\n- `role` (optional): User role, max 100 characters\n\n**Response:**\n- Status: 201 Created\n- Returns user data and OTP sent message\n\n**Notes:**\n- After registration, OTP is sent to the provided phone number\n- User must verify OTP before account is fully activated",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/auth/login/send-otp": {
+      "post": {
+        "tags": [
+          "Send Login OTP (Phone)"
+        ],
+        "summary": "Send Login OTP (Phone)",
+        "description": "Send OTP code to phone number (via SMS) for login.\n\n**Request Fields:**\n- `phone` (required): Phone number in format 05XXXXXXXX\n- `context` (optional): Authentication context, default is 'client'\n\n**Response:**\n- Status: 200 OK\n- Returns success message with OTP sent confirmation\n\n**Notes:**\n- OTP is sent via SMS to the provided phone number\n- OTP expires after 5 minutes (default)\n- Rate limited to prevent abuse\n- In development mode, OTP '1111' is accepted for testing",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/auth/login/resend-otp": {
+      "post": {
+        "tags": [
+          "Resend Login OTP (Phone Verification)"
+        ],
+        "summary": "Resend Login OTP (Phone Verification)",
+        "description": "Resend verification OTP to the user's phone number (mainly for account activation by phone).\n\n**Request Fields:**\n- `phone` (required): Phone number in format 05XXXXXXXX (must belong to an existing user)\n\n**Response:**\n- Status: 200 OK\n- Returns success message with OTP re-sent confirmation\n\n**Use Cases:**\n- User registered but did not receive the verification OTP\n- User's verification OTP expired and needs a new one\n\n**Notes:**\n- This endpoint uses the dedicated `/v1/auth/resend-otp` route\n- OTP is sent via the configured phone channel (e.g. SMS)\n- Subject to same OTP rate limiting rules\n- In development mode, a fixed OTP (like `1111`) may still be valid depending on configuration",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/auth/login/verify-otp": {
+      "post": {
+        "tags": [
+          "Verify OTP"
+        ],
+        "summary": "Verify OTP",
+        "description": "Verify OTP code and get access token.\n\n**Request Fields:**\n- `phone` (required): Phone number in format 05XXXXXXXX\n- `otp_code` (required): 4-digit OTP code received via SMS\n- `context` (optional): Authentication context, default is 'client'\n\n**Response:**\n- Status: 200 OK\n- Returns user data, access_token, and refresh_token\n\n**Notes:**\n- OTP must match the code sent to the phone\n- OTP expires after 5 minutes\n- Access token expires after 60 minutes (default)\n- Refresh token expires after 30 days (default)\n- Tokens are automatically saved to collection variables\n- In development mode, OTP '1111' is accepted for testing",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "Refresh Token"
+        ],
+        "summary": "Refresh Token",
+        "description": "Refresh access token using refresh token.\n\n**Request Fields:**\n- `refresh_token` (required): Valid refresh token\n\n**Response:**\n- Status: 200 OK\n- Returns new access_token and refresh_token\n\n**Notes:**\n- Refresh token must be valid and not expired\n- If token rotation is enabled (default), old refresh token is invalidated\n- New tokens are automatically saved to collection variables\n- Access token expires after 60 minutes (default)\n- Refresh token expires after 30 days (default)\n- Returns 401 Unauthorized if refresh token is invalid or expired",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/auth/validate-token": {
+      "post": {
+        "tags": [
+          "Validate Token"
+        ],
+        "summary": "Validate Token",
+        "description": "Validate access or refresh token and return its status.\n\n**Request Fields:**\n- `token` (required): Access or refresh token to validate\n- `type` (optional): Expected token type, 'access' or 'refresh'\n\n**Response:**\n- Status: 200 OK (valid token) or 422 Unprocessable Entity (invalid/expired token)\n- Returns validation result with:\n  - `valid`: Boolean indicating if token is valid\n  - `type`: Token type ('access' or 'refresh')\n  - `expires_at`: Token expiration timestamp (ISO 8601)\n  - `is_expired`: Boolean indicating if token is expired\n  - `message`: Validation message\n\n**Notes:**\n- If type is specified, validates that token matches the expected type\n- Returns is_expired: true if token is not found or invalid\n- Returns is_expired: true if token has passed expiration time\n- Useful for checking token validity before making authenticated requests",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "Logout"
+        ],
+        "summary": "Logout",
+        "description": "Logout and revoke tokens.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Request Fields:**\n- `refresh_token` (optional): Refresh token to revoke along with access token\n\n**Response:**\n- Status: 200 OK\n- Returns success message\n\n**Notes:**\n- Revokes the current access token\n- If refresh_token is provided, it is also revoked\n- After logout, tokens cannot be used for authentication\n- Recommended to provide refresh_token to fully log out\n- Returns 401 Unauthorized if access token is invalid",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Get Current User"
+        ],
+        "summary": "Get Current User",
+        "description": "Get authenticated user information (same structure as login user data).\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n- Use the `access_token` from collection variables\n\n**Response:**\n- Status: 200 OK\n- Returns user data in `data` object with:\n  - `id`, `name`, `is_active`\n  - `email`, `phone`, `phone_verified_at`\n  - `image`: User profile image object (media resource) if available\n  - `roles`: List of user roles (id, name, is_active)\n  - `permissions`: List of permissions (name, label, subject)\n\n**Notes:**\n- Same user payload as returned in the `user` object of the login response, but **without** tokens\n- Requires valid access token\n- Token must not be expired\n- Returns 401 Unauthorized if token is invalid or expired",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/profile": {
+      "get": {
+        "tags": [
+          "Get Profile"
+        ],
+        "summary": "Get Profile",
+        "description": "Get authenticated user profile information.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Response:**\n- Status: 200 OK\n- Returns user profile with stage, grade, semester, image, roles, and permissions\n\n**Notes:**\n- Returns current authenticated user's profile\n- Includes relationships: stage, grade, semester\n- User object structure matches /v1/auth/me response (including image, roles, permissions)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Update Profile"
+        ],
+        "summary": "Update Profile",
+        "description": "Update authenticated user profile information.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Request Body (form-data, all fields optional):**\n- `name`: User full name (2-100 chars, accepts any language, can contain numbers and symbols)\n- `email`: Email address (valid email, max 255 chars, must be unique)\n- `stage_id`: UUID of the academic stage (optional)\n- `grade_id`: UUID of the academic grade (optional)\n- `semester_id`: UUID of the semester (optional)\n- `school_name`: School name (optional, max 255 chars)\n- `image`: User profile image (optional, jpg/jpeg/png/webp, max 5MB)\n\n**Response:**\n- Status: 200 OK\n- Returns updated user profile (including image, roles, permissions)\n\n**Notes:**\n- All fields are optional (use 'sometimes' validation)\n- Email must be unique if provided",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Delete Account"
+        ],
+        "summary": "Delete Account",
+        "description": "Delete user account permanently.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Response:**\n- Status: 200 OK\n- Returns success message\n\n**Notes:**\n- This action is permanent and cannot be undone\n- All user tokens are revoked before account deletion\n- User account and all associated data will be deleted\n- Use with caution",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/profile/change-phone": {
+      "post": {
+        "tags": [
+          "Change Phone"
+        ],
+        "summary": "Change Phone",
+        "description": "Request to change phone number. Sends OTP to the new phone number.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Request Body (form-data):**\n- `phone` (required): New phone number (format: 05XXXXXXXX, must be unique)\n\n**Response:**\n- Status: 200 OK\n- Returns success message indicating OTP sent to new phone\n\n**Notes:**\n- Phone number must be in format 05XXXXXXXX\n- Phone number must be unique (not used by another user)\n- Cannot use the same phone number as current\n- OTP will be sent to the new phone number\n- After receiving OTP, use Verify Phone Change endpoint to complete the change",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/profile/verify-phone-change": {
+      "post": {
+        "tags": [
+          "Verify Phone Change"
+        ],
+        "summary": "Verify Phone Change",
+        "description": "Verify OTP and complete phone number change.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Request Body (form-data):**\n- `phone` (required): New phone number (format: 05XXXXXXXX)\n- `otp_code` (required): OTP code received on the new phone (4 digits by default)\n\n**Response:**\n- Status: 200 OK\n- Returns updated user profile with new phone number\n\n**Notes:**\n- OTP code length is configurable (default: 4 digits)\n- Phone number must match the one used in Change Phone request\n- After verification, phone number is updated and phone_verified_at is set\n- Returns error if OTP is invalid or expired",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/languages": {
+      "get": {
+        "tags": [
+          "Get Available Languages"
+        ],
+        "summary": "Get Available Languages",
+        "description": "Get list of all available languages in the system.\n\n**Authentication:**\n- Optional: If Bearer token is provided, the response will include `is_current` flag indicating the user's current language preference\n- Without token: Returns all languages without `is_current` flag\n\n**Response Fields:**\n- `code`: Language code (e.g., 'ar', 'en')\n- `name`: Language name in English (e.g., 'Arabic', 'English')\n- `native_name`: Language name in its native script\n- `direction`: Text direction ('ltr' for left-to-right, 'rtl' for right-to-left)\n- `is_default`: Boolean indicating if this is the default language\n- `is_current`: Boolean indicating if this is the current user's language (only when authenticated)\n\n**Notes:**\n- Available languages are configured in `config/languages.php`\n- Default language is set via `APP_LOCALE` environment variable",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/languages/current": {
+      "patch": {
+        "tags": [
+          "Update User Language"
+        ],
+        "summary": "Update User Language",
+        "description": "Update the current authenticated user's language preference.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Request Body:**\n- `language` (required): Language code (e.g., 'ar', 'en')\n  - Must be one of the available language codes from `config/languages.php`\n  - Case-insensitive (e.g., 'AR', 'ar', 'En', 'en' all work)\n  - Max length: 5 characters\n\n**Response:**\n- Status: 200 OK\n- Returns updated user ID and language code\n\n**Example Request:**\n```json\n{\n    \"language\": \"ar\"\n}\n```\n\n**Example Response:**\n```json\n{\n    \"status\": true,\n    \"code\": 200,\n    \"action\": \"success\",\n    \"message\": \"Language updated successfully.\",\n    \"data\": {\n        \"user_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n        \"language\": \"ar\"\n    }\n}\n```\n\n**Notes:**\n- The language preference is saved to the user's profile\n- This affects the locale for future API responses\n- Available language codes: 'ar' (Arabic), 'en' (English)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "language": "ar"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/stages": {
+      "get": {
+        "tags": [
+          "List Stages"
+        ],
+        "summary": "List Stages",
+        "description": "Get list of all academic stages (e.g., Primary, Intermediate, Secondary). This endpoint does not require authentication.\n\n**Query Parameters:**\n- `paginate`: Enable pagination (1 = paginated, omit = get all)\n- `per_page`: Items per page (1-100, default: 15)\n- `sort`: Sort field with optional '-' prefix for descending (default: -id)\n- `filter[is_active]`: Filter by active status (1/0)\n- `filter[search]`: Search in name and description\n- `include`: Include relationships (translations, grades)\n\n**Response:** Returns list of academic stages with translations (Arabic and English).",
+        "parameters": [
+          {
+            "name": "paginate",
+            "in": "query",
+            "description": "Enable pagination (1 = paginated, omit = get all)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Items per page (1-100, default: 15)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field (use - for descending, default: -id)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[is_active]",
+            "in": "query",
+            "description": "Filter by active status (1/0)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[search]",
+            "in": "query",
+            "description": "Search in name and description",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (translations, grades)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/stages/{{stage_id}}": {
+      "get": {
+        "tags": [
+          "Get Stage"
+        ],
+        "summary": "Get Stage",
+        "description": "Get a specific academic stage by ID (UUID). This endpoint does not require authentication.\n\n**Path Parameters:**\n- `id`: UUID of the academic stage\n\n**Query Parameters (Optional):**\n- `include`: Include relationships (translations, grades)\n\n**Response:** Returns stage details with translations (Arabic and English).",
+        "parameters": [
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (translations, grades)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/grades": {
+      "get": {
+        "tags": [
+          "List Grades"
+        ],
+        "summary": "List Grades",
+        "description": "Get list of all academic grades with advanced filtering, sorting, and pagination. This endpoint does not require authentication.\n\n**Query Parameters:**\n- `paginate`: Enable pagination (1 = paginated, omit = get all)\n- `per_page`: Items per page (1-100, default: 15)\n- `sort`: Sort field with optional '-' prefix for descending (default: -id)\n- `filter[stage_id]`: Filter by stage ID (exact match)\n- `filter[is_active]`: Filter by active status (1/0)\n- `filter[search]`: Search in name and description\n- `include`: Include relationships (translations, stage, semesters)\n\n**Response:** Returns list of academic grades with translations (Arabic and English) and associated stage information.",
+        "parameters": [
+          {
+            "name": "paginate",
+            "in": "query",
+            "description": "Enable pagination (1 = paginated, omit = get all)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Items per page (1-100, default: 15)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field (use - for descending, default: -id)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[stage_id]",
+            "in": "query",
+            "description": "Filter by stage ID (exact match)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[is_active]",
+            "in": "query",
+            "description": "Filter by active status (1/0)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[search]",
+            "in": "query",
+            "description": "Search in name and description",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (translations, stage, semesters)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/grades/{{grade_id}}": {
+      "get": {
+        "tags": [
+          "Get Grade"
+        ],
+        "summary": "Get Grade",
+        "description": "Get a specific academic grade by ID (UUID). This endpoint does not require authentication.\n\n**Path Parameters:**\n- `id`: UUID of the academic grade\n\n**Query Parameters (Optional):**\n- `include`: Include relationships (translations, stage, semesters)\n\n**Response:** Returns grade details with translations (Arabic and English) and associated stage information.",
+        "parameters": [
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (translations, stage, semesters)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/semesters": {
+      "get": {
+        "tags": [
+          "List Semesters"
+        ],
+        "summary": "List Semesters",
+        "description": "Get list of all semesters (classrooms) with advanced filtering, sorting, and pagination. This endpoint does not require authentication.\n\n**Query Parameters:**\n- `paginate`: Enable pagination (1 = paginated, omit = get all)\n- `per_page`: Items per page (1-100, default: 15)\n- `sort`: Sort field with optional '-' prefix for descending (default: -id)\n- `filter[grade_id]`: Filter by grade ID (exact match)\n- `filter[is_active]`: Filter by active status (1/0)\n- `filter[search]`: Search in name and description\n- `include`: Include relationships (translations, grade, grade.stage)\n\n**Response:** Returns list of semesters with translations (Arabic and English) and associated grade and stage information.",
+        "parameters": [
+          {
+            "name": "paginate",
+            "in": "query",
+            "description": "Enable pagination (1 = paginated, omit = get all)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Items per page (1-100, default: 15)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field (use - for descending, default: -id)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[grade_id]",
+            "in": "query",
+            "description": "Filter by grade ID (exact match)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[is_active]",
+            "in": "query",
+            "description": "Filter by active status (1/0)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[search]",
+            "in": "query",
+            "description": "Search in name and description",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (translations, grade, grade.stage)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/semesters/{{semester_id}}": {
+      "get": {
+        "tags": [
+          "Get Semester"
+        ],
+        "summary": "Get Semester",
+        "description": "Get a specific semester (classroom) by ID (UUID). This endpoint does not require authentication.\n\n**Path Parameters:**\n- `id`: UUID of the semester\n\n**Query Parameters (Optional):**\n- `include`: Include relationships (translations, grade, grade.stage)\n\n**Response:** Returns semester details with translations (Arabic and English) and associated grade and stage information.",
+        "parameters": [
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (translations, grade, grade.stage)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/subjects": {
+      "get": {
+        "tags": [
+          "List Subjects"
+        ],
+        "summary": "List Subjects",
+        "description": "List all academic subjects with pagination, filtering, sorting, and field selection support. This endpoint does not require authentication.\n\n**Query Parameters:**\n- `paginate`: Enable pagination (1 or 0)\n- `per_page`: Number of items per page (default: 15)\n- `sort`: Sort field and direction (e.g., -id, name)\n- `filter[is_active]`: Filter by active status (1 or 0)\n- `include`: Include relationships (e.g., stage,grade,semester)\n- `fields`: Specify fields to return (comma-separated)\n\n**Response:**\n- Status: 200 OK\n- Returns paginated list of subjects",
+        "parameters": [
+          {
+            "name": "paginate",
+            "in": "query",
+            "description": "Enable pagination",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Number of items per page",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort field and direction (e.g., -id for descending)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[is_active]",
+            "in": "query",
+            "description": "Filter by active status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (e.g., stage,grade,semester)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Specify fields to return",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/subjects/{{subject_id}}": {
+      "get": {
+        "tags": [
+          "Get Subject"
+        ],
+        "summary": "Get Subject",
+        "description": "Get a single academic subject by ID. This endpoint does not require authentication.\n\n**Path Parameters:**\n- `id`: UUID of the subject\n\n**Query Parameters:**\n- `include`: Include relationships (e.g., stage,grade,semester)\n- `fields`: Specify fields to return (comma-separated)\n\n**Response:**\n- Status: 200 OK\n- Returns the subject resource",
+        "parameters": [
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (e.g., stage,grade,semester)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Specify fields to return",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/curricula": {
+      "get": {
+        "tags": [
+          "List Curricula"
+        ],
+        "summary": "List Curricula",
+        "description": "Get list of all curricula (books) with advanced filtering, sorting, and pagination. This endpoint does not require authentication, but authentication is recommended to get user-specific notes.\n\n**Query Parameters:**\n- `paginate`: Enable pagination (1 = paginated, omit = get all)\n- `per_page`: Items per page (1-100, default: 15)\n- `sort`: Sort field with optional '-' prefix for descending (default: -created_at)\n- `filter[semester_id]`: Filter by semester ID (exact match)\n- `filter[is_active]`: Filter by active status (1/0)\n- `filter[search]`: Search in title, description, and note\n- `include`: Include relationships (translations, semester)\n\n**Response:** Returns list of curricula with title, description, file information, download count, and associated semester information.\n\n**Note:** If authenticated, the response will include `user_note` field if the user has added a personal note to any curriculum.",
+        "parameters": [
+          {
+            "name": "paginate",
+            "in": "query",
+            "description": "Enable pagination (1 = paginated, omit = get all)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Items per page (1-100, default: 15)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field (use - for descending, default: -created_at)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[semester_id]",
+            "in": "query",
+            "description": "Filter by semester ID (exact match)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[is_active]",
+            "in": "query",
+            "description": "Filter by active status (1/0)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[search]",
+            "in": "query",
+            "description": "Search in title, description, and note",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (translations, semester)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/curricula/by-semester/{{semester_id}}": {
+      "get": {
+        "tags": [
+          "Get Curricula By Semester"
+        ],
+        "summary": "Get Curricula By Semester",
+        "description": "Get list of curricula for a specific semester. This endpoint does not require authentication, but authentication is recommended to get user-specific notes.\n\n**Path Parameters:**\n- `semesterId`: UUID of the semester\n\n**Query Parameters:**\n- `paginate`: Enable pagination (1 = paginated, omit = get all)\n- `per_page`: Items per page (1-100, default: 15)\n\n**Response:** Returns list of curricula for the specified semester.",
+        "parameters": [
+          {
+            "name": "paginate",
+            "in": "query",
+            "description": "Enable pagination (1 = paginated, omit = get all)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Items per page (1-100, default: 15)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/curricula/{{curriculum_id}}": {
+      "get": {
+        "tags": [
+          "Get Curriculum"
+        ],
+        "summary": "Get Curriculum",
+        "description": "Get a specific curriculum by ID (UUID). This endpoint does not require authentication, but authentication is recommended to get user-specific notes.\n\n**Path Parameters:**\n- `id`: UUID of the curriculum\n\n**Query Parameters (Optional):**\n- `include`: Include relationships (translations, semester)\n\n**Response:** Returns curriculum details with title, description, file information, download count, and associated semester information.\n\n**Note:** If authenticated, the response will include `user_note` field if the user has added a personal note to this curriculum.",
+        "parameters": [
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (translations, semester)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/curricula/{{curriculum_id}}/download": {
+      "get": {
+        "tags": [
+          "Download Curriculum"
+        ],
+        "summary": "Download Curriculum",
+        "description": "Download a curriculum file. This endpoint does not require authentication.\n\n**Path Parameters:**\n- `id`: UUID of the curriculum\n\n**Response:** Returns the curriculum file for download.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/curricula/{{curriculum_id}}/note": {
+      "post": {
+        "tags": [
+          "Add Note to Curriculum"
+        ],
+        "summary": "Add Note to Curriculum",
+        "description": "Add a personal note to a curriculum. This endpoint requires authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `id`: UUID of the curriculum\n\n**Request Body:**\n- `note` (required): Personal note text\n\n**Response:**\n- Status: 200 OK\n- Returns updated curriculum with user note included\n\n**Example Request:**\n```json\n{\n    \"note\": \"My personal note about this curriculum\"\n}\n```",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "note": "My personal note about this curriculum"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/contact": {
+      "post": {
+        "tags": [
+          "Send Contact Message"
+        ],
+        "summary": "Send Contact Message",
+        "description": "Send a contact message. This endpoint does not require authentication, but if authenticated, the message will be linked to the user account.\n\n**Request Body (form-data):**\n- `contact_message_type_id` (required): UUID of the contact message type (e.g., complaint, suggestion, inquiry, request, other)\n- `name` (required): Sender's name (2-100 chars, accepts Arabic and English)\n- `email` (required): Sender's email address (valid email, max 255 chars)\n- `phone` (optional): Sender's phone number (format: 05XXXXXXXX)\n- `message` (required): Message content (10-2000 chars)\n\n**Response:**\n- Status: 201 Created\n- Returns created contact message\n\n**Note:** If authenticated, the `user_id` will be automatically set from the authenticated user.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/contact/types": {
+      "get": {
+        "tags": [
+          "Get Contact Message Types"
+        ],
+        "summary": "Get Contact Message Types",
+        "description": "Get list of available contact message types (e.g., Complaint, Suggestion, Inquiry, Request, Other). This endpoint does not require authentication.\n\n**Response:**\n- Status: 200 OK\n- Returns list of contact message types with translations\n\n**Example Types:**\n- Complaint\n- Suggestion\n- Inquiry\n- Request\n- Other",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Login (Email"
+        ],
+        "summary": "Login (Email/Password)",
+        "description": "Login with email/phone and password.\n\n**Request Fields:**\n- `context` (required): Authentication context, 'client' or 'dashboard'\n- `identifier` (required): Email address or phone number\n- `password` (required): User password, minimum 6 characters\n\n**Response:**\n- Status: 200 OK\n- Returns:\n  - `user`: Authenticated user object (includes `id`, `name`, `is_active`, `email`, `phone`, `phone_verified_at`, `image`, `roles`, `permissions`)\n  - `access_token`: Access token string\n  - `refresh_token`: Refresh token string\n  - `expires_at`: Access token expiry datetime (ISO 8601)\n\n**Notes:**\n- Can use email or phone as identifier\n- Returns full authorization context (roles & permissions) for the user\n- Account lockout after multiple failed attempts\n- Access token expires after 60 minutes (default)\n- Refresh token expires after 30 days (default)\n- Tokens are automatically saved to collection variables",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Forgot Password"
+        ],
+        "summary": "Forgot Password",
+        "description": "Send password reset OTP code to user's email.\n\n**Request Fields:**\n- `email` (required): Email address that exists in the system\n- `context` (optional): Authentication context, default is 'dashboard'\n\n**Response:**\n- Status: 200 OK\n- Returns success message confirming OTP was sent\n\n**Notes:**\n- OTP is sent via email to the provided email address\n- OTP expires after 5 minutes (default)\n- Rate limited to prevent abuse\n- Only available for 'dashboard' context by default\n- In development mode, OTP '1111' is accepted for testing",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/auth/verify-reset-otp": {
+      "post": {
+        "tags": [
+          "Verify Reset OTP"
+        ],
+        "summary": "Verify Reset OTP",
+        "description": "Verify password reset OTP code.\n\n**Request Fields:**\n- `email` (required): Email address that exists in the system\n- `otp_code` (required): 4-digit OTP code received via email\n- `context` (optional): Authentication context, default is 'dashboard'\n\n**Response:**\n- Status: 200 OK\n- Returns email and otp_verified confirmation\n\n**Notes:**\n- OTP must match the code sent to the email\n- OTP expires after 5 minutes\n- Must verify OTP before resetting password\n- Only available for 'dashboard' context by default\n- In development mode, OTP '1111' is accepted for testing",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Reset Password"
+        ],
+        "summary": "Reset Password",
+        "description": "Reset user password after OTP verification.\n\n**Request Fields:**\n- `email` (required): Email address that exists in the system\n- `otp_code` (required): 4-digit OTP code that was verified\n- `password` (required): New password, minimum 8 characters, must contain uppercase, lowercase, and numbers\n- `password_confirmation` (required): Must match the password field\n- `context` (optional): Authentication context, default is 'dashboard'\n\n**Response:**\n- Status: 200 OK\n- Returns success message confirming password was reset\n\n**Notes:**\n- OTP must be verified first using /verify-reset-otp endpoint\n- Password must meet complexity requirements (min 8 chars, mixed case, numbers)\n- Password confirmation must match password\n- Only available for 'dashboard' context by default\n- After reset, user can login with new password",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/users": {
+      "get": {
+        "tags": [
+          "List Users"
+        ],
+        "summary": "List Users",
+        "description": "Get list of all users (admins, service requesters, etc.) with Query API support. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Query Parameters:**\n- `paginate`: Enable pagination (1 = paginated, omit = get all)\n- `per_page`: Items per page (1-100, default: 15)\n- `sort`: Sort by field (use - for descending, default: -id)\n- `filter[is_active]`: Filter by active status (true/false)\n- `filter[name]`: Search by name (partial match)\n- `filter[email]`: Search by email (partial match)\n- `filter[phone]`: Search by phone (partial match)\n- `filter[role]`: Filter by role (admin, super_admin, client)\n  - Use `filter[role]=admin` for admin users only\n  - Use `filter[role]=client` for service requesters only\n  - Use `filter[role]=super_admin` for super admin users only\n  - Omit to get all users\n- `include`: Include relationships (roles, subscriptions, stage, grade, semester)\n- `fields`: Select specific fields (optional)\n\n**Response:**\n- Status: 200 OK\n- Returns paginated or full list of users\n\n**Notes:**\n- Returns all users by default (no role filtering)\n- Use `filter[role]` to filter by specific role (admin, super_admin, client)\n- Supports Query API for filtering, sorting, pagination, and field selection\n- Default sort is by ID (newest first)",
+        "parameters": [
+          {
+            "name": "paginate",
+            "in": "query",
+            "description": "Enable pagination (1 = paginated, omit = get all)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Items per page (1-100, default: 15)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field (use - for descending, default: -id)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[is_active]",
+            "in": "query",
+            "description": "Filter by active status (true/false)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[name]",
+            "in": "query",
+            "description": "Search by name (partial match)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[email]",
+            "in": "query",
+            "description": "Search by email (partial match)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[phone]",
+            "in": "query",
+            "description": "Search by phone (partial match)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[role]",
+            "in": "query",
+            "description": "Filter by role (admin, super_admin, client) - omit to get all users",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (roles, subscriptions, stage, grade, semester)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Create User"
+        ],
+        "summary": "Create User",
+        "description": "Create a new user. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Request Body (form-data):**\n- `name` (required): User name (2-100 chars)\n- `email` (required): Email address (valid email, max 255 chars, must be unique)\n- `phone` (required): Phone number (format: 05XXXXXXXX, must be unique)\n- `password` (required): Password (min 8 chars, must be confirmed)\n- `password_confirmation` (required): Password confirmation (must match password)\n- `role_id` (required): Role name (must be 'admin' or 'super_admin')\n- `is_active` (optional): Active status (default: true)\n\n**Response:**\n- Status: 201 Created\n- Returns created user with relationships\n\n**Notes:**\n- Email and phone must be unique\n- Password must be at least 8 characters\n- Role must be 'admin' or 'super_admin'\n- User will be able to login to dashboard after creation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/users/{{user_id}}": {
+      "get": {
+        "tags": [
+          "Get User"
+        ],
+        "summary": "Get User",
+        "description": "Get a single user by ID. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `id` (required): UUID of the user\n\n**Query Parameters:**\n- `include`: Include relationships (roles, subscriptions, stage, grade, semester)\n- `fields`: Select specific fields (optional)\n\n**Response:**\n- Status: 200 OK\n- Returns user with relationships\n\n**Notes:**\n- Returns 404 Not Found if user doesn't exist\n- Only returns users with admin or super_admin roles\n- Supports Query API for field selection and includes",
+        "parameters": [
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (roles, subscriptions, stage, grade, semester)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Update User"
+        ],
+        "summary": "Update User",
+        "description": "Update a user. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `id` (required): UUID of the user\n\n**Request Body (form-data, all fields optional):**\n- `name`: User name (2-100 chars)\n- `email`: Email address (valid email, max 255 chars, must be unique)\n- `phone`: Phone number (format: 05XXXXXXXX, must be unique)\n- `password`: New password (min 8 chars, must be confirmed)\n- `password_confirmation`: Password confirmation (required if password provided)\n- `role_id`: Role name (must be 'admin' or 'super_admin')\n- `is_active`: Active status\n\n**Response:**\n- Status: 200 OK\n- Returns updated user with relationships\n\n**Notes:**\n- Cannot update yourself\n- All fields are optional\n- Email and phone must be unique if provided\n- Password must be at least 8 characters if provided",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Delete User"
+        ],
+        "summary": "Delete User",
+        "description": "Delete a user. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `id` (required): UUID of the user\n\n**Response:**\n- Status: 200 OK\n- Returns success message\n\n**Notes:**\n- Cannot delete yourself\n- Cannot delete super_admin users\n- This action is permanent and cannot be undone\n- User will be logged out if currently logged in",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/users/{{user_id}}/activate": {
+      "post": {
+        "tags": [
+          "Activate User"
+        ],
+        "summary": "Activate User",
+        "description": "Activate a user account. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `id` (required): UUID of the user\n\n**Response:**\n- Status: 200 OK\n- Returns activated user\n\n**Notes:**\n- Cannot activate yourself\n- User will be able to login to dashboard after activation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/users/{{user_id}}/deactivate": {
+      "post": {
+        "tags": [
+          "Deactivate User"
+        ],
+        "summary": "Deactivate User",
+        "description": "Deactivate a user account. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `id` (required): UUID of the user\n\n**Request Body (form-data):**\n- `reason` (optional): Reason for deactivation (3-250 chars)\n\n**Response:**\n- Status: 200 OK\n- Returns deactivated user\n\n**Notes:**\n- Cannot deactivate yourself\n- User will be logged out if currently logged in\n- User will not be able to login to dashboard after deactivation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/settings": {
+      "get": {
+        "tags": [
+          "Get All Settings"
+        ],
+        "summary": "Get All Settings",
+        "description": "Get all application settings with Query API support.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Query Parameters:**\n- `filter[group]`: Filter by setting group (e.g., 'contact', 'social_links', 'content', 'general', 'technical')\n- `filter[is_translatable]`: Filter translatable (1) or fixed (0) settings\n- `filter[key]`: Filter by setting key (partial match)\n- `sort`: Sort by field (only 'id' or '-id' is allowed, default: '-id')\n- `fields`: Select specific fields (e.g., 'key,group,value,is_translatable')\n- `include`: Include relationships (e.g., 'translations')\n- `paginate`: Enable pagination (1) or get all (default: returns all)\n- `page`: Page number (default: 1)\n- `per_page`: Items per page (default: 15)\n\n**Response:**\n- Status: 200 OK\n- Returns list of settings with their values\n\n**Notes:**\n- Supports Query API for filtering, sorting, field selection, and pagination\n- Only 'id' or '-id' can be used for sorting (no other fields allowed)\n- Translatable settings include translations for all languages\n- Fixed settings have single value\n- By default, returns all settings without pagination\n- Use `paginate=1` to enable pagination",
+        "parameters": [
+          {
+            "name": "filter[group]",
+            "in": "query",
+            "description": "Filter by setting group (optional, e.g., 'contact', 'social_links', 'content', 'general', 'technical')",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[is_translatable]",
+            "in": "query",
+            "description": "Filter translatable (1) or fixed (0) settings (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field (optional, only 'id' or '-id' is allowed)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Select specific fields (optional, e.g., 'key,group,value,is_translatable')",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (optional, e.g., 'translations')",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paginate",
+            "in": "query",
+            "description": "Enable pagination (optional, 1 to paginate, default: returns all)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number (optional, default: 1)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Items per page (optional, default: 15)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Update Settings"
+        ],
+        "summary": "Update Settings",
+        "description": "Update multiple settings at once.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Request Fields:**\n- Any setting key as field name\n- For **fixed settings**: Provide single value (string or number)\n  - Examples: `support_email`, `facebook`, `trial_period_days`, `vat_percentage`\n  - **Special case**: `support_phone` is an array of 2 phone numbers, use `support_phone[]` keys in form-data:\n    - `support_phone[]` = '0500000000' (first number)\n    - `support_phone[]` = '966500000000' (second number)\n- For **translatable settings**: Provide values per language using `[language]` notation\n  - Examples: `about_us[ar]`, `about_us[en]`, `privacy_policy[ar]`, `privacy_policy[en]`\n\n**Response:**\n- Status: 200 OK\n- Returns success message\n\n**Notes:**\n- Can update multiple settings in a single request\n- Fixed settings accept single value (string or number)\n- Translatable settings require language-specific values using `[ar]` and `[en]` notation\n- All fields are optional (nullable)\n- Only provided fields will be updated\n- Common setting keys:\n  - Contact: `support_email`, `support_phone` (array of 2 numbers), `whatsapp_number`\n  - Social: `facebook`, `twitter_x`, `instagram`, `snapchat`, `tiktok`, `youtube`\n  - Content: `about_us`, `privacy_policy`, `terms_and_conditions` (translatable)\n  - General: `trial_period_days`, `vat_percentage`\n  - Technical: `otp_expiration_seconds`, `task_reminder_minutes_before`, `max_file_size_mb`",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/settings/{{setting_key}}": {
+      "get": {
+        "tags": [
+          "Get Setting by Key"
+        ],
+        "summary": "Get Setting by Key",
+        "description": "Get a single setting by its key with Query API support.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `key` (required): Setting key (e.g., 'support_email', 'about_us', 'facebook', 'trial_period_days')\n\n**Query Parameters:**\n- `fields`: Select specific fields (optional, e.g., 'key,group,value,is_translatable')\n- `include`: Include relationships (optional, e.g., 'translations')\n\n**Response:**\n- Status: 200 OK\n- Returns single setting with its value\n\n**Notes:**\n- Returns 404 Not Found if setting key doesn't exist\n- Supports Query API for field selection and includes\n- Translatable settings include translations for all languages when `include=translations` is used\n- Fixed settings return single value\n- Common keys:\n  - Contact: 'support_email', 'support_phone' (array of 2 numbers), 'whatsapp_number'\n  - Social: 'facebook', 'twitter_x', 'instagram', 'snapchat', 'tiktok', 'youtube'\n  - Content: 'about_us', 'privacy_policy', 'terms_and_conditions'\n  - General: 'trial_period_days', 'vat_percentage'\n  - Technical: 'otp_expiration_seconds', 'task_reminder_minutes_before', 'max_file_size_mb'",
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Select specific fields (optional, e.g., 'key,group,value,is_translatable')",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (optional, e.g., 'translations')",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/roles": {
+      "get": {
+        "tags": [
+          "List Roles"
+        ],
+        "summary": "List Roles",
+        "description": "Get list of roles with pagination and filtering support.\n\n**Query Parameters:**\n- `paginate`: Enable pagination (1 or 0)\n- `per_page`: Items per page\n- `include`: Include relationships (`translations`, `permissions`)\n- `fields`: Select specific fields (e.g., `id,name,is_active`)\n  - Note: `id` field returns the role key (name from database), not the numeric ID\n- `filter[search]`: Search by name\n- `filter[is_active]`: Filter by active status\n\n**Response Fields:**\n- `id`: Role key/slug (from database `name` field), not numeric ID\n- `name`: Translated role name (based on current locale)\n- `is_active`: Active status\n- `translations`: Role translations (when included)\n- `permissions`: Role permissions (when included)",
+        "parameters": [
+          {
+            "name": "paginate",
+            "in": "query",
+            "description": "Enable pagination (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Items per page (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Select specific fields (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[search]",
+            "in": "query",
+            "description": "Search roles by name (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[is_active]",
+            "in": "query",
+            "description": "Filter by active status (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Create Role"
+        ],
+        "summary": "Create Role",
+        "description": "Create a new role with translations and permissions.\n\n**Request Fields:**\n- `name[ar]` (required): Role name in Arabic\n- `name[en]` (required): Role name in English\n- `permissions[]` (optional): Permission names to attach (array, e.g., 'create-role', 'read-role')\n- `is_active` (optional): Active status (boolean, default: true)\n\n**Response:**\n- Returns created role with `id` field containing the auto-generated role key (UUID)\n- Note: `id` in response is the role key/slug (auto-generated UUID), not a numeric ID\n- Role key is automatically generated as UUID if not provided\n\n**Note:** Permissions must be sent as permission names (strings), not IDs. Use `permissions[]` key multiple times for multiple permissions.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/roles/{{role_id}}": {
+      "get": {
+        "tags": [
+          "Get Role"
+        ],
+        "summary": "Get Role",
+        "description": "Get details of a specific role.\n\n**Path Parameters:**\n- `role_id` (required): Role key/slug or numeric ID\n\n**Query Parameters:**\n- `fields`: Select specific fields (e.g., `id,name,is_active`)\n  - Note: `id` field returns the role key (name from database), not the numeric ID\n- `include`: Include relationships (e.g., `permissions,translations`)\n\n**Response Fields:**\n- `id`: Role key/slug (from database `name` field), not numeric ID\n- `name`: Translated role name (based on current locale)\n- `is_active`: Active status\n- `translations`: Role translations (when included)\n- `permissions`: Role permissions (when included)",
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Select specific fields (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Update Role"
+        ],
+        "summary": "Update Role",
+        "description": "Update an existing role.\n\n**Path Parameters:**\n- `role_id` (required): Role key/slug or numeric ID\n\n**Request Fields:**\n- `name[ar]` (optional): Update role name in Arabic\n- `name[en]` (optional): Update role name in English\n- `permissions[]` (optional): Permission names to attach (array, e.g., 'create-role', 'read-role')\n- `is_active` (optional): Active status (boolean)\n\n**Response:**\n- Returns updated role with `id` field containing the role key (from database `name` field)\n- Note: `id` in response is the role key/slug, not a numeric ID\n\n**Note:** All fields are optional. Only provided fields will be updated. Permissions must be sent as permission names (strings), not IDs.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Delete Role"
+        ],
+        "summary": "Delete Role",
+        "description": "Delete a role (cannot delete system roles or roles with users).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/roles/{{role_id}}/activate": {
+      "post": {
+        "tags": [
+          "Activate Role"
+        ],
+        "summary": "Activate Role",
+        "description": "Activate a role.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/roles/{{role_id}}/deactivate": {
+      "post": {
+        "tags": [
+          "Deactivate Role"
+        ],
+        "summary": "Deactivate Role",
+        "description": "Deactivate a role.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/permissions": {
+      "get": {
+        "tags": [
+          "List Permissions"
+        ],
+        "summary": "List Permissions",
+        "description": "Get list of all available permissions. Use ?fields=id,key,name to get permission key and translated name. Use ?include=translations to get all translations. Use ?sort=-created_at or ?sort=-updated_at for sorting.",
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Select specific fields (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field (use - for descending, e.g., -created_at, -updated_at) (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/permissions/{{permission_id}}": {
+      "get": {
+        "tags": [
+          "Get Permission"
+        ],
+        "summary": "Get Permission",
+        "description": "Get a single permission by ID (UUID) with support for field selection. Use ?fields=id,key,name to get permission key and translated name. Use ?include=translations to get all translations.",
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Select specific fields (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/contact-messages": {
+      "get": {
+        "tags": [
+          "List Contact Messages"
+        ],
+        "summary": "List Contact Messages",
+        "description": "Get list of all contact messages with Query API support. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Query Parameters:**\n- `paginate`: Enable pagination (1 = paginated, omit = get all)\n- `per_page`: Items per page (1-100, default: 15)\n- `sort`: Sort by field (use - for descending, default: -created_at)\n- `filter[status]`: Filter by status (pending, in_progress, resolved, closed)\n- `filter[user_id]`: Filter by user ID (exact match)\n- `filter[search]`: Search in name, email, phone, and message\n- `include`: Include relationships (user, type, repliedBy)\n- `fields`: Select specific fields (optional)\n\n**Response:**\n- Status: 200 OK\n- Returns paginated or full list of contact messages\n\n**Notes:**\n- Supports Query API for filtering, sorting, pagination, and field selection\n- Default sort is by creation date (newest first)\n- Status values: pending, in_progress, resolved, closed",
+        "parameters": [
+          {
+            "name": "paginate",
+            "in": "query",
+            "description": "Enable pagination (1 = paginated, omit = get all)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Items per page (1-100, default: 15)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field (use - for descending, default: -created_at)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[status]",
+            "in": "query",
+            "description": "Filter by status (pending, in_progress, resolved, closed)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[user_id]",
+            "in": "query",
+            "description": "Filter by user ID (exact match)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[search]",
+            "in": "query",
+            "description": "Search in name, email, phone, and message",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (user, type, repliedBy)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Select specific fields (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/contact-messages/{{contact_message_id}}": {
+      "get": {
+        "tags": [
+          "Get Contact Message"
+        ],
+        "summary": "Get Contact Message",
+        "description": "Get a single contact message by ID. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `id` (required): UUID of the contact message\n\n**Query Parameters:**\n- `include`: Include relationships (user, type, repliedBy)\n- `fields`: Select specific fields (optional)\n\n**Response:**\n- Status: 200 OK\n- Returns contact message with relationships\n\n**Notes:**\n- Returns 404 Not Found if message doesn't exist\n- Supports Query API for field selection and includes",
+        "parameters": [
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (user, type, repliedBy)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Select specific fields (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Delete Contact Message"
+        ],
+        "summary": "Delete Contact Message",
+        "description": "Delete a contact message. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `id` (required): UUID of the contact message to delete\n\n**Response:**\n- Status: 200 OK\n- Returns success message\n\n**Notes:**\n- Only admins can delete messages\n- This action cannot be undone",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/contact-messages/{{contact_message_id}}/reply": {
+      "post": {
+        "tags": [
+          "Reply to Contact Message"
+        ],
+        "summary": "Reply to Contact Message",
+        "description": "Reply to a contact message. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `id` (required): UUID of the contact message to reply to\n\n**Request Body (JSON):**\n- `reply` (required): Admin reply message (10-2000 characters)\n\n**Response:**\n- Status: 200 OK\n- Returns updated contact message with admin reply\n\n**Example Request:**\n```json\n{\n    \"reply\": \"Thank you for contacting us. We will review your request and respond as soon as possible.\"\n}\n```\n\n**Notes:**\n- The reply will be saved as `admin_reply` field\n- The `replied_by` field will be automatically set to the authenticated admin user ID\n- The `replied_at` timestamp will be automatically set\n- Message status may be updated automatically",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "reply": "Thank you for contacting us. We will review your request and respond as soon as possible."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/contact-messages/{{contact_message_id}}/status": {
+      "patch": {
+        "tags": [
+          "Update Contact Message Status"
+        ],
+        "summary": "Update Contact Message Status",
+        "description": "Update the status of a contact message. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `id` (required): UUID of the contact message\n\n**Request Body (JSON):**\n- `status` (required): New status (pending, in_progress, resolved, closed)\n\n**Response:**\n- Status: 200 OK\n- Returns updated contact message\n\n**Example Request:**\n```json\n{\n    \"status\": \"in_progress\"\n}\n```\n\n**Status Values:**\n- `pending`: Message is pending review\n- `in_progress`: Message is being processed\n- `resolved`: Message has been resolved\n- `closed`: Message is closed\n\n**Notes:**\n- Only admins can update message status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "status": "in_progress"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/evaluations": {
+      "get": {
+        "tags": [
+          "List Evaluations"
+        ],
+        "summary": "List Evaluations",
+        "description": "Get list of all evaluations with Query API support. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Query Parameters:**\n- `paginate`: Enable pagination (1 = paginated, omit = get all)\n- `per_page`: Items per page (1-100, default: 15)\n- `sort`: Sort by field (use - for descending, default: -created_at)\n- `filter[user_name]`: Filter by teacher name (partial match)\n- `filter[curriculum_title]`: Filter by curriculum title (partial match)\n- `filter[user_id]`: Filter by user ID (exact match)\n- `filter[curriculum_id]`: Filter by curriculum ID (exact match)\n- `filter[search]`: Search in comment, user name, and curriculum title\n- `include`: Include relationships (user, curriculum)\n- `fields`: Select specific fields (optional)\n\n**Response:**\n- Status: 200 OK\n- Returns paginated or full list of evaluations\n\n**Notes:**\n- Supports Query API for filtering, sorting, pagination, and field selection\n- Default sort is by creation date (newest first)\n- User and curriculum relationships are automatically included for admin endpoints",
+        "parameters": [
+          {
+            "name": "paginate",
+            "in": "query",
+            "description": "Enable pagination (1 = paginated, omit = get all)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Items per page (1-100, default: 15)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by field (use - for descending, default: -created_at)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[user_name]",
+            "in": "query",
+            "description": "Filter by teacher name (partial match)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[curriculum_title]",
+            "in": "query",
+            "description": "Filter by curriculum title (partial match)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[user_id]",
+            "in": "query",
+            "description": "Filter by user ID (exact match)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[curriculum_id]",
+            "in": "query",
+            "description": "Filter by curriculum ID (exact match)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[search]",
+            "in": "query",
+            "description": "Search in comment, user name, and curriculum title",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (user, curriculum)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Select specific fields (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/v1/evaluations/{{evaluation_id}}": {
+      "get": {
+        "tags": [
+          "Get Evaluation"
+        ],
+        "summary": "Get Evaluation",
+        "description": "Get a single evaluation by ID. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `id` (required): UUID of the evaluation\n\n**Query Parameters:**\n- `include`: Include relationships (user, curriculum)\n- `fields`: Select specific fields (optional)\n\n**Response:**\n- Status: 200 OK\n- Returns evaluation with relationships\n\n**Notes:**\n- Returns 404 Not Found if evaluation doesn't exist\n- Supports Query API for field selection and includes\n- User and curriculum relationships are automatically included for admin endpoints",
+        "parameters": [
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Include relationships (user, curriculum)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Select specific fields (optional)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Delete Evaluation"
+        ],
+        "summary": "Delete Evaluation",
+        "description": "Delete an evaluation. Requires admin authentication.\n\n**Authentication:**\n- Required: Bearer token in Authorization header\n\n**Path Parameters:**\n- `id` (required): UUID of the evaluation to delete\n\n**Response:**\n- Status: 200 OK\n- Returns success message\n\n**Notes:**\n- Only admins can delete evaluations\n- This action cannot be undone",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "securitySchemes": {}
+  }
+}
